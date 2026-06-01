@@ -1,0 +1,1 @@
+{"version":3,"file":"controler.d.ts","sourceRoot":"","sources":["../../../src/app/todo/controler.ts"],"names":[],"mappings":"AAEA,OAAO,KAAK,EAAE,OAAO,EAAC,QAAQ,EAAE,MAAM,SAAS,CAAC;AAE/C,qBAAa,IAAI;IACd,OAAO,CAAC,GAAG,CAAQ;;IAIZ,UAAU,CAAC,GAAG,EAAC,OAAO,EAAE,GAAG,EAAC,QAAQ;IAM9B,OAAO,CAAC,GAAG,EAAC,OAAO,EAAC,GAAG,EAAC,QAAQ;CAWhD"}

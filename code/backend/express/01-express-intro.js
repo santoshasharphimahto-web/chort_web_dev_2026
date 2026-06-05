@@ -74,11 +74,16 @@ function block_1_server(){
         }catch(error){
             console.log(error)
         }
+        finally{
+            server.close(()=>{
+        console.log("ho gya bhiii");
+
+        resolve()
+     }) 
+        }
     })
+         })
 
-
-
-    })
 }
 
 async function main() {

@@ -20,6 +20,9 @@ class ApiError extends Error{
     static forbidden(message="badrequest"){
         return new ApiError(401,message)
     }
+    static noFound(message="badrequest"){
+        return new ApiError(404,message)
+    }
 }
 
 export default ApiError   

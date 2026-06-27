@@ -1,16 +1,18 @@
-import  express  from "express";
-import type {Express,Response,Request} from 'express'
+import express from "express";
+import type { Express, Request, Response } from "express";
+import {authRouter} from './auth/routes.js'
 
+export function createApplication(): Express {
+    const app: Express = express();
 
-export function createApplication():Express{
-    const app=express()
-    //middle Ware
-    //Routes
-    app.get('/',(req,res)=>{
-        return res.json({message:"welcome to the ChaiCode Server "})
-    })
+    // Middleware
+    app.use(express.json()); // Ek basic JSON middleware add karna hamesha sahi rehta hai
+    app.use('/auth',authRouter)
 
-    return app
+    // Routes
+    // app.get('/', (req: Request, res: Response) => {
+    //     return res.json({ message: "Welcome to the ChaiCode Server" });
+    // });
 
-    
+    return app;
 }

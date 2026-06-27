@@ -1,21 +1,21 @@
-import {createServer} from "node:http";
-import {createApplication} from './app/index.js'
-import type {Response,Request} from 'express'
+import { createServer } from "node:http";
+import { createApplication } from './app/index.js';
+
 async function Main() {
-   
-    try{
-        const server= createServer(createApplication)
-        const port:number=8080;
-        server.listen(port,()=>{
-            console.log(`server is running at this ${port}`);
-        })
-    }catch(error){
-      console.log("errroe agye hai")  
-      throw error
+    try {
+        // createApplication ko call () karna zaroori hai taaki express app instance mile
+        const app = createApplication(); 
+        const server = createServer(app);
+        
+        const port: number = 8080;
+        
+        server.listen(port, () => {
+            console.log(`Server is running at http://localhost:${port}`);
+        });
+    } catch (error) {
+        console.error("Error aa gaya hai:", error);  
+        throw error;
     }
-    
 }
 
-Main()
-
-
+Main();

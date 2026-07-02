@@ -6,12 +6,12 @@ import connectDB from "./src/common/db/dbConnection.js";
 const start=async ()=>{
     await connectDB()
     app.listen(process.env.PORT,()=>{
-        console.log(`aerver is running at ${PORT}in ${process.env.DEPLOYMENT_MODE}`)
+        console.log(`server is running at ${process.env.PORT}in ${process.env.DEPLOYMENT_MODE}`)
 
     })
 
 }
 start().catch((err)=>{
-    console.log("failed to start server")
+    console.log("failed to start server",err)
     process.exit(1)
 })

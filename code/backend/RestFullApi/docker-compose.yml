@@ -1,0 +1,11 @@
+services:
+  mongosssedb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongoose
+      MONGO_INITDB_ROOT_PASSWORD: mongoose
+      MONGO_INITDB_ROOT_DATABASE: chaiCode
+    volumes:
+      - ./data:/data/db

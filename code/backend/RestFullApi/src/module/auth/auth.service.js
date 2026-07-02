@@ -1,61 +1,51 @@
-import ApiError from "../../common/utiles/res/api-error"
+import ApiError from "../../common/utiles/res/api-error.js"
 import User from "./auth.model.js"
 import { accessToken, accessTokenVerify, genreateUserVerificationToken, refreshToken,  refreshTokenVerfiy } from "../../common/utiles/token/verficationToken.js";
 import crypto, { verify } from "crypto"
 import { isMainThread } from "worker_threads";
-import {sendEmail,VerfiyPasswordEmail} from "../../../src/common/utiles/token/verficationToken.js"
+import {sendEmail,VerfiyPasswordEmail} from "../../common/utiles/mail/sendMail.js"
 
-
-const hashToken=async (Token)=>{
+const hashToken = async (Token) => {
   return crypto.createHash("Sha256")
-   .update("Token")
-   .digest("hex")
-}
+    .update(Token)
+    .digest("hex");
+};
 
-const registerService= async({email,name,role,password})=>{
+const registerService = async ({ email, name, role, password }) => {
+  const user = await User.findOne({ email });
 
-// acccept a data fro the user email,passwod,name,roll
-// validate it 
-// check email alredy exits in db
-//if not,create a user in db ({name,emai,pass,isverfied,verficatoken})
-//hash password before svae
-// send a email for the verfication token
-// send a res after succes 201
-  const user = await User.findOne({email});
-  if(user){
-    throw ApiError.conflict("user all ready exits with this email")
+  console.log('email', email);
+  if (user) {
+    throw ApiError.conflict("user all ready exits with this email");
   }
   
-  const refreshToken= refreshToken({id:user._id})
-  const accessToken= accessToken({id:user._id,role:user.role})
-
-  const {rawToken,hasedToken}=genreateUserVerificationToken()
-  const user=await User.create({
+  const { rawToken, hasedToken } = await genreateUserVerificationToken();
+  
+  const userRes = await User.create({
     name,
     email,
-    password, // some how i willl hash the password
+    password, 
     role,
-    isVerfied,
-    refreshToken:hashToken(refreshToken),
-    verificationToken:hasedToken
+    verificationToken: hasedToken 
+  });
 
-  })
+  const MyrefreshToken =  await refreshToken({ id: userRes._id });
+  const MyaccessToken = await accessToken({ id: userRes._id, role: userRes.role });
 
+  try {
+    sendEmail(email, rawToken, name);
+  } catch (error) {
+    console.log(error.message);
+  }
 
+  userRes.refreshToken = await hashToken(MyrefreshToken);
+  await userRes.save({ validateBeforeSave: false });
 
+  const userObj = userRes.toObject();
+  delete userObj.password;
 
-  // todo sendin a email for the verfication
-     try{
-      sendEmail(email,rawToken)
-     }catch(error){
-      console.log(error.message)
-     }
-  // for the deletion of the code 
-  const userObj=user.toObject()
-   delete userObj.password
-  return {user:userObj,accessToken}
-
-}
+  return { user: userObj, accessToken: MyaccessToken, refreshToken: MyrefreshToken };
+};
 
 // creating a login Services
 const loginService= async({email,password})=>{
@@ -63,16 +53,16 @@ const loginService= async({email,password})=>{
   const user=await User.findOne({email}).select("+password").select("+refreshToken")
   if(!user) throw ApiError.badrequest("user with this email exits");
   // som how i will checks the password
-  if(!user.isVerfied) throw ApiError.forbidden("please verfiy you email")
-  const refreshToken= refreshToken({id:user._id})
-  const accessToken= accessToken({id:user._id,role:user.role})
-  user.refreshToken=hashToken(refreshToken)
+  // if(!user.isVerfied) throw ApiError.forbidden("please verfiy you email")
+  const MyrefreshToken= await refreshToken({id:user._id})
+  const MyaccessToken= await accessToken({id:user._id,role:user.role})
+  user.refreshToken=await hashToken(MyrefreshToken)
    await user.save({validateBeforeSave:false})
   const userobj=user.toObject()
   delete userobj.refreshToken
   delete userobj.password
 
-  return {user:userobj,refreshToken,accessToken}
+  return {user:userobj,refreshToken:MyrefreshToken,accessToken:MyaccessToken}
 
 }
 // refreshing the acccesToken after expire SERVICE
@@ -92,9 +82,9 @@ const refershservice=async(token)=>{
     const decoded= refreshTokenVerfiy(token)
   const user= await User.findById(decoded._id).select("+refreshToken")
   if(!user.refreshToken===hashToken(token)) throw ApiError.unauthorized("invalid Refresh Token")
-    const accessToken=accessToken({id:user._id,role:user.role})
-    const refreshToken=refreshToken({id:user._id})
-    user.refreshToken=hashToken(refreshToken)
+    const accessToken=await accessToken({id:user._id,role:user.role})
+    const refreshToken=await refreshToken({id:user._id})
+    user.refreshToken=await hashToken(refreshToken)
     await user.save({validateBeforeSave:false})
     const userObj=user.toObject()
     delete userObj.refreshToken
@@ -194,4 +184,12 @@ const profileServicce=async (UserId)=>{
 
 export{
     registerService,
+    loginService,
+    verifyUserService,
+    newPasswordService,
+    forgetPasswordService,
+    logoutService,
+    profileServicce,
+    refershservice
+
 }

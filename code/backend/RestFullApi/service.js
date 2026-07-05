@@ -1,6 +1,6 @@
 import app from "./src/module/app.js";
 import "dotenv/config"
-import connectDB from "./src/common/db/dbConnection.js";
+import connectDB from "./src/common/config/dbConnection.js";
 // import { server } from "typescript";
 
 const start=async ()=>{

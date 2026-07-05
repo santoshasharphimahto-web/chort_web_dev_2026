@@ -74,7 +74,39 @@ const forgetPassword=async (req,res) => {
   await authservice.forgetPasswordService(req.body)
   
 } 
-co
+const newpassword=async (req,res) => {
+  await authservice.newPasswordService(req.body,req.params.token)
+}
+const uploadAvatar = async (req, res, next) => {
+  try {
+    const file = req.file;
+
+    // 1. CRITICAL FIX: Agar file nahi hai, toh yahin se response send karo aur return ho jao
+    if (!file) {
+      // Agar aapka ApiError ek standard class hai toh use next(error) mein pass karo ya res ke saath bhejo
+      // Agar aapka custom custom response handler hai toh use res pass karna padega:
+      return res.status(400).json({
+        success: false,
+        message: "Bhai, koi file upload nahi hui! Postman check karo."
+      });
+    }
+
+    // 2. Agar file sahi salamat mil gayi, tabhi service call hogi
+    const result = await authservice.uploadAvatarService(req.user.id, file);
+
+    // 3. Response bhejte waqt result bhejdo jisme avatarUrl aur fileId dono hain
+    return apiResponse.ok(res, "Avatar uploaded successfully", result);
+
+  } catch (err) {
+    // 4. CRITICAL FIX: Asli error ko console mein dekho taaki andhere mein teer na chalana pade
+    console.error("Error inside uploadAvatar controller:", err);
+    
+    // Asli error ko Express ke global error handler ko pass karo
+    return next(err); 
+    // Ya fir agar purana tarika hi chahiye toh aise:
+    // return res.status(500).json({ success: false, message: "Failed to upload avatar" });
+  }
+}
 export {
     register,
     logOut,
@@ -82,5 +114,7 @@ export {
     verifyUser,
     getMe,
     login,
-    forgetPassword
+    forgetPassword,
+    newpassword,
+    uploadAvatar,
 }

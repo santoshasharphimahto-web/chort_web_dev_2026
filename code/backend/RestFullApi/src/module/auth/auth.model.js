@@ -30,6 +30,10 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false, // ✅ dafault को default किया
     },
+    avatar: {
+        type: String,//third party url
+        default: false,
+    },
     verificationToken: {
         type: String,
         select: false,

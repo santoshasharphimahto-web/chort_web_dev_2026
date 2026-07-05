@@ -1,5 +1,5 @@
 import User from "./auth.model.js"
-import { accessTokenVerify } from "../../common/utiles/token/verficationToken.js"
+import { accessTokenVerify ,refreshTokenVerfiy} from "../../common/utiles/token/verficationToken.js"
 import ApiError from "../../common/utiles/res/api-error.js";
 
 async function authme(req, res, next) {
@@ -16,7 +16,8 @@ async function authme(req, res, next) {
         }
 
         // 1. Added 'await' just in case accessTokenVerify returns a promise
-        const decoded = await accessTokenVerify(token); 
+        const decoded = await refreshTokenVerfiy(token); 
+        console.log('Decoded token:', decoded);
         
         // 2. Fallback check for both 'id' and '_id' from the token payload
         const targetId = decoded?.id || decoded?._id;

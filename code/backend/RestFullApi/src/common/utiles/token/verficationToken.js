@@ -26,7 +26,7 @@ const accessToken= async(payload)=>{
 
 }
 const accessTokenVerify= async(payload)=>{
-   return jwt.sign(payload,process.env.JWT_ACCESSSTOKEN_SECREATE)
+   return jwt.verify(payload,process.env.JWT_ACCESSSTOKEN_SECREATE)
 
 }
 

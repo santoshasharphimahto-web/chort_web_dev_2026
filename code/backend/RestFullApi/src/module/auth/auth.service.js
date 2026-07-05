@@ -4,6 +4,7 @@ import { accessToken, accessTokenVerify, genreateUserVerificationToken, refreshT
 import crypto, { verify } from "crypto"
 import { isMainThread } from "worker_threads";
 import {sendEmail,VerfiyPasswordEmail} from "../../common/utiles/mail/sendMail.js"
+import fs from "node:fs"
 
 const hashToken = async (Token) => {
   return crypto.createHash("Sha256")
@@ -178,9 +179,67 @@ const verifyUserService=async(token)=>{
 const profileServicce=async (UserId)=>{
   const user= await User.findById(UserId);
   return {user}
-}
+} 
 
+const uploadAvatarService = async (userId, file) => {
+  // 1. Safety Guard: Make sure Multer actually successfully caught a file
+  if (!file || !file.path) {
+    throw new Error("No file provided or file upload failed locally.");
+  }
 
+  // 2. Extra Safety Guard: Check if the file physically exists before streaming
+  if (!fs.existsSync(file.path)) {
+    throw new Error(`Local file not found at path: ${file.path}. Check your folder setup.`);
+  }
+
+  let fileStream;
+
+  try {
+    // 3. Create the stream safely
+    fileStream = fs.createReadStream(file.path);
+
+    // 4. Upload directly to ImageKit via stream
+    const uploadResponse = await imagekitConfig.upload({
+      file: fileStream,
+      fileName: file.originalname,
+      folder: "Users/Avatars"
+    });
+
+    // 5. Explicitly destroy/close the stream so Windows releases the file handle lock
+    fileStream.destroy();
+
+    // 6. Save the new avatar URL to MongoDB
+    await User.findByIdAndUpdate(userId, { avatar: uploadResponse.url }, { new: true });
+
+    // 7. Success clean-up: Remove the file from local uploads
+    if (fs.existsSync(file.path)) {
+      fs.unlinkSync(file.path);
+    }
+
+    return {
+      avatarUrl: uploadResponse.url,
+      fileId: uploadResponse.fileId // Fixed typo from 'filedId'
+    };
+
+  } catch (err) {
+    // 8. If the stream is still open during an error, destroy it so it can be safely unlinked
+    if (fileStream && typeof fileStream.destroy === 'function') {
+      fileStream.destroy();
+    }
+
+    // 9. Error Clean-up: Safely remove the local file if it exists
+    try {
+      if (file && file.path && fs.existsSync(file.path)) {
+        fs.unlinkSync(file.path);
+      }
+    } catch (cleanupErr) {
+      console.error("Failed to delete file after upload error:", cleanupErr.message);
+    }
+
+    // 10. Bubble up the error to your controller/error middleware
+    throw err;
+  }
+};
 
 export{
     registerService,
@@ -190,6 +249,7 @@ export{
     forgetPasswordService,
     logoutService,
     profileServicce,
-    refershservice
+    refershservice,
+    uploadAvatarService
 
 }

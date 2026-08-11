@@ -19,14 +19,30 @@
      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
      crossorigin=""></script>   
      <script>
+      const socket=io()
     var map = L.map('map').setView([51.505, -0.09], 13);
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
+let remoteMarker= new Map()
+socket.on('server:location:update', (data)=>{
+    const {lat, lng, id}=data;
+    if(!remoteMarker.has(id)){
+        const marker = L.marker([lat, lng]).addTo(map)
+            .bindPopup(`User ${id}`)
+            .openPopup();
+        remoteMarker.set(id, marker);
+    } else{
+        const marker = remoteMarker.get(id);
+        marker.setLatLng([lat, lng])
+
+    }
+
+    })
 
   function onLocationFound() {
-    new Promise((resolve, reject)=>{
+    return new Promise((resolve, reject)=>{
         // Check if geolocation is supported by the browser
 if ("geolocation" in navigator) {
   // Prompt user for permission to access their location
@@ -38,7 +54,7 @@ if ("geolocation" in navigator) {
       const lng = position.coords.longitude;
 
       // Do something with the location data, e.g. display on a map
-    //   console.log(`Latitude: ${lat}, longitude: ${lng}`);
+      console.log(`Latitude: ${lat}, longitude: ${lng}`);
 
       resolve({lat, lng})
     },
@@ -56,7 +72,25 @@ if ("geolocation" in navigator) {
     })
 
   }
-  onLocationFound().then((data)=>{console.log(data)})
-     </script>
+  let updatedLocation=null;
+  // onLocationFound().then((data)=>{console.log(data)})
+  async function main(){
+    setInterval(async()=>{
+        const {lat, lng} = await onLocationFound()
+
+        socket.emit('client:location:update', {lat, lng})
+        map.invalidateSize()  // Invalidate the map size to ensure it is displayed correctly
+        map.setView([lat, lng], 13);
+        if(!updatedLocation){
+           updatedLocation = L.marker([lat, lng]).addTo(map)
+                .bindPopup('You are here!')
+                .openPopup();
+        } else{
+            updatedLocation.setLatLng([lat, lng])
+        }
+    }, 5000)
+  }
+  window.addEventListener('load', main)
+</script>
 </body>
 </html>

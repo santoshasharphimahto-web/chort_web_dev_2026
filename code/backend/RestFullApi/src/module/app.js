@@ -4,6 +4,8 @@ import multer from 'multer'
 import ApiResponse from "../common/utiles/res/api-respons.js";
 import path from 'path'
 import cookieParser from "cookie-parser";
+import ownerRouter from "./ipl-ms/router/owner.router.js"
+import teamRouter from "./ipl-ms/router/team.router.js"
 
 
 const app=express();
@@ -11,6 +13,8 @@ app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 app.use(cookieParser());
 app.use("/auth",Router);
+app.use("/api/owner",ownerRouter);
+app.use("/api/team",teamRouter);
 // uploading a file on the disk
 //  const storage = multer.diskStorage({
 //   destination: function (req, file, cb) {

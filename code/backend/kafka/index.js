@@ -2,9 +2,9 @@ import http from 'http';
 import express from 'express';
 import { Server } from 'socket.io';
 import path from 'node:path';
-import kafkaClient from './kafka-client.js';
+import { kafkaClient } from './kafka-client.js';
 
-function main(){
+async function main(){
     const app = express();
     const port = process.env.PORT?? 3000;
     const server = http.createServer(app);
@@ -24,7 +24,7 @@ function main(){
     })
     io.on('connection',async(socket)=>{
         console.log(`[socket is ${socket.id} is connected...}]`);
-        socket.on('client:location:update', (data)=>{
+        socket.on('client:location:update', async (data)=>{
             console.log(`Received location update from client ${socket.id}:`, data);
            await producer.send({
                 topic: 'location-Update',

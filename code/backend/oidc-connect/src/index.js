@@ -51,45 +51,21 @@ app.get('/o/jwks',(req, res)=>{
 })
 
 // Login endpoint (also handles POST to /o/jwks)
-app.post('/o/jwks', async (req, res) => {
-    const {email, password} = req.body;
-    if(!email || !password) {
-        return res.status(400).json({error: "Email and password are required"});
-    }
-    
-    const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email));
-    if(!user){
-        return res.status(401).json({error: "Invalid email or password"});
-    }
-    
-    const hashedPassword = crypto.createHash('sha256').update(password + user.salt).digest('hex');
-    if(hashedPassword !== user.password){
-        return res.status(401).json({error: "Invalid email or password"});
-    }
-    
-    const ISSUER = "http://localhost:3000";
-    const now = Math.floor(Date.now() / 1000);
-    const claims = {
-        iss: ISSUER,
-        sub: user.id,
-        email: user.email,
-        email_verified: String(user.emailVerified),
-        exp: now + 3600,
-        family_name: user.lastName ?? undefined,
-        given_name: user.firstName ?? "",
-        name: [user.firstName, user.lastName].filter(Boolean).join(' '),
-        picture: user.profilePicture ?? undefined,
-    }
-    
-    const token = jwt.sign(claims, privateKey, { algorithm: 'RS256' });
-    res.json({ token });
-})
+
 
 app.get('/o/authenticate',(req, res)=>{
     res.sendFile(path.join(__dirname, '../public/login.html'));
 })
 
 app.get('/singup', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/singup.html'));
+});
+
+app.get('/signup', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/singup.html'));
+});
+
+app.get('/signup.html', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/singup.html'));
 });
 
@@ -105,14 +81,14 @@ app.post('/o/authenticate/signin',async (req, res)=>{
         return res.status(400).json({error: "Email and password are required"});
 
     }
-   const [user]= await db.select().from('usersTable').where(eq(usersTable.email, email));
+  const [user]= await db.select().from(usersTable).where(eq(usersTable.email, email));
    if(!user){
-    res.status(401).json({error: "Invalid email or password"});
+   return res.status(401).json({error: "Invalid email or password"});
    }
    const hashedPassword = crypto.createHash('sha256').update(password + user.salt).digest('hex');
 
   if(hashedPassword !== user.password){
-    res.status(401).json({error: "Invalid email or password"});
+    return res.status(401).json({error: "Invalid email or password"});
   }
 
   const ISSUER = "http://localhost:3000";
@@ -173,10 +149,35 @@ app.post("/o/authenticate/sign-up", async (req, res) => {
   res.status(201).json({ ok: true });
 });
 
+app.post('/o/userinfo', (req, res) => {
+    // Handle userinfo endpoint logic here
+    const authHeader = req.headers.authorization;
+    if(!authHeader ?.startsWith('Bearer ')){
+      res.status(401).json({error: "Missing or invalid Authorization header"});
+    }
+    const token = authHeader.slice(7);
+    if(!token){
+      res.status(401).json({error: "Missing token"});
+    }
+    
+    try{
+      const decoded = jwt.verify(token, publicKey, { algorithms: ['RS256'] });
+      res.json({
+        sub: decoded.sub,
+        email: decoded.email,
+        email_verified: decoded.email_verified,
+        family_name: decoded.family_name ?? undefined,
+        given_name: decoded.given_name ?? "",
+        name: [decoded.given_name, decoded.family_name].filter(Boolean).join(' '),
+        picture: decoded.picture ?? undefined,
+      })
 
 
-
-
+    }
+    catch(err){
+      res.status(401).json({error: "Invalid token"});
+    }
+});
 
 app.listen(3000, () => {
     console.log('Server is running on http://localhost:3000');

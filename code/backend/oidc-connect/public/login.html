@@ -124,8 +124,7 @@
 <body>
     <div class="container">
         <h1>Login</h1>
-        <!-- Form posts directly to jwks endpoint -->
-        <form action="/o/jwks" method="POST">
+        <form action="/o/authenticate/signin" method="POST">
             <div class="form-group">
                 <label for="email">Email Address</label>
                 <input type="email" id="email" name="email" placeholder="Enter your email" required>
@@ -150,7 +149,7 @@
 
     <script>
         function goToSignup() {
-            window.location.href = '/singup.html';
+            window.location.href = '/signup';
         }
     </script>
 </body>

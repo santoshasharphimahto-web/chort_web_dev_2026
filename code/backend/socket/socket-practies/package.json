@@ -1,0 +1,26 @@
+{
+  "name": "socket-practies",
+  "version": "1.0.0",
+  "description": "testing-sockets",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node ./dist/index.js",
+    "build": "npx tsc",
+    "dev": "tsc-watch --onSuccess \"node ./dist/index.js\""
+  },
+  "author": "santosh_kumar",
+  "license": "ISC",
+  "dependencies": {
+    "@types/express": "^5.0.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "@types/socket.io": "^3.0.1",
+    "tsc-watch": "^7.2.1",
+    "typescript": "^7.0.2"
+  }
+}

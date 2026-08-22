@@ -11,6 +11,17 @@ function main() {
     const server = http.createServer(app);
     const port = process.env.PORT || 3000;
     const io = new Server(server);
+    io.on('connection', (socket) => {
+        console.log("a new connection is connected ", socket.id);
+        socket.on('user:message', (data) => {
+            console.log("message from the socket", data);
+            socket.broadcast.emit('server:message', data);
+        });
+        socket.on('user:typing', (data) => {
+            console.log(data);
+            socket.broadcast.emit('server:typing', data);
+        });
+    });
     // const publicDirectory = path.resolve(__dirname, "../public");
     app.use(express.static(path.resolve('./public')));
     server.listen(port, () => {

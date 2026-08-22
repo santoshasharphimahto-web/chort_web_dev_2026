@@ -55,36 +55,258 @@
 		.name-box button { width: 100%; min-height: 45px; margin-top: 10px; }
 		@keyframes rise { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 		@media (max-width: 700px) { .shell { padding: 0; } .app { height: 100vh; min-height: 0; grid-template-columns: 1fr; } aside { display: none; } header, form { padding-left: 18px; padding-right: 18px; } .messages { padding: 22px 18px; } .bubble-wrap { max-width: 82%; } }
+
+		#chatApp {
+			width: min(760px, calc(100% - 32px));
+			height: min(720px, calc(100vh - 48px));
+			min-height: 460px;
+			margin: 24px auto;
+			display: flex;
+			flex-direction: column;
+			overflow: hidden;
+			background: var(--paper);
+			border: 1px solid rgba(23, 33, 38, .12);
+			box-shadow: 0 24px 70px rgba(30, 55, 50, .16);
+		}
+
+		#mainSection {
+			min-height: 0;
+			flex: 1;
+			display: flex;
+			flex-direction: column;
+			gap: 18px;
+			padding: 28px;
+			overflow-y: auto;
+			background: var(--paper);
+		}
+
+		#left-senderText,
+		#right-receiverText {
+			width: fit-content;
+			max-width: min(75%, 500px);
+			min-height: 42px;
+			padding: 12px 15px;
+			line-height: 1.45;
+			overflow-wrap: anywhere;
+			border: 1px solid var(--line);
+			background: var(--white);
+			animation: rise .25s ease-out;
+		}
+
+		#left-senderText {
+			align-self: flex-end;
+			color: #162018;
+			background: var(--mint);
+			border-color: var(--mint);
+		}
+
+		#right-receiverText {
+			align-self: flex-start;
+		}
+
+		.typeicon {
+			position: relative;
+			align-self: flex-start;
+			width: 44px;
+			height: 26px;
+			margin-top: auto;
+			border: 0;
+			background: var(--ink);
+		}
+
+		.typeicon::before,
+		.typeicon::after {
+			position: absolute;
+			top: 10px;
+			width: 5px;
+			height: 5px;
+			border-radius: 50%;
+			background: var(--white);
+			content: "";
+			animation: typing-dot 1.2s infinite ease-in-out;
+		}
+
+		.typeicon::before {
+			left: 10px;
+			box-shadow: 9px 0 0 var(--white);
+		}
+
+		.typeicon::after {
+			left: 28px;
+			animation-delay: .2s;
+		}
+
+		@keyframes typing-dot {
+			0%, 60%, 100% { opacity: .35; transform: translateY(0); }
+			30% { opacity: 1; transform: translateY(-3px); }
+		}
+
+		#chatApp > form {
+			margin: 0;
+			padding: 18px 28px 24px;
+			border-top: 1px solid var(--line);
+			background: var(--white);
+		}
+
+		#fromDiv {
+			display: flex;
+			gap: 10px;
+			padding: 6px 6px 6px 16px;
+			border: 1px solid #d8dfdc;
+			background: var(--paper);
+		}
+
+		#userText {
+			width: 100%;
+			min-height: 40px;
+			padding: 10px 0;
+			border: 0;
+			outline: 0;
+			color: var(--ink);
+			background: transparent;
+			font: inherit;
+		}
+
+		#userText::placeholder {
+			color: var(--muted);
+		}
+
+		#fromDiv button {
+			width: 48px;
+			min-height: 40px;
+			padding: 0;
+			font-size: 13px;
+		}
+
+		@media (max-width: 560px) {
+			#chatApp {
+				width: 100%;
+				height: 100vh;
+				min-height: 0;
+				margin: 0;
+				border: 0;
+			}
+
+			#mainSection {
+				padding: 20px 16px;
+			}
+
+			#left-senderText,
+			#right-receiverText {
+				max-width: 86%;
+			}
+
+			#chatApp > form {
+				padding: 14px 16px 18px;
+			}
+		}
 	</style>
 </head>
 <body>
-	<div class="shell"><div class="app">
-		<aside><div class="brand">open<span>room</span></div><div class="intro"><h1>Small room.<br>Good talk.</h1><p>A simple space for real-time conversation, shared one message at a time.</p><div class="room"><div class="room-label">Current channel</div><strong># general</strong></div></div></aside>
-		<main><header><div class="title"><h2>General chat</h2><div class="status"><span class="dot" id="statusDot"></span><span id="statusText">Connecting...</span></div></div><div class="online"><span id="onlineCount">0</span> online</div></header><section class="messages" id="messages"><div class="welcome">Welcome to the room. Say hello and start the conversation.</div></section><form id="messageForm"><div class="composer"><input id="messageInput" maxlength="500" autocomplete="off" placeholder="Write a message..." aria-label="Message"><button type="submit" aria-label="Send message">Send</button></div></form></main>
-	</div></div>
-	<div class="name-modal" id="nameModal"><div class="name-box"><h2>Join the room</h2><p>Choose a name to appear in the conversation.</p><form id="nameForm"><input id="nameInput" maxlength="24" required autocomplete="name" placeholder="Your name"><button type="submit">Enter chat</button></form></div></div>
+    <div id="chatApp"> 
+		<div id="mainSection">
+			
+			</div>
+		<form>  
+			<div id="fromDiv">
+				<input id="userText" type="text" placeholder="enter your message">
+				<button type="submit">send</button>
+			</div>
+		</form>
+	</div>
 	<script src="/socket.io/socket.io.js"></script>
 	<script>
-		const socket = io();
-		const messages = document.querySelector('#messages');
-		const messageInput = document.querySelector('#messageInput');
-		const nameModal = document.querySelector('#nameModal');
-		const nameInput = document.querySelector('#nameInput');
-		let username = '';
-		const initials = (name) => name.slice(0, 2).toUpperCase();
-		const time = (date) => new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-		function addMessage(message) {
-			const row = document.createElement('article'); row.className = `message ${message.username === username ? 'mine' : ''}`;
-			row.innerHTML = `<div class="avatar">${initials(message.username)}</div><div class="bubble-wrap"><div class="meta">${message.username} · ${time(message.time)}</div><div class="bubble"></div></div>`;
-			row.querySelector('.bubble').textContent = message.text; messages.append(row); messages.scrollTop = messages.scrollHeight;
+	const socket = io();
+	// select a chatappdiv add event listern on submit 
+	// select usetxt to extaract input 
+
+	// once user click on send 
+	// create a new dvi id  for showcase in ui is right-receiverText 
+	// create a new dvi id  for showcase in ui is left-senderText 
+	// select  a mensection div
+	//append a this nwely create div in it
+	// emit the data to server 
+	// check the  socket connection the server 
+	// listen a event on the the chanle user:message 
+	// if reaceive that event on channle ,prin and 
+	// again show back to the connected socket means client 
+	// if server send event on particular chancel listen on forented
+	// again show the message to the chat interface of the connected socket
+
+	// input elemnt applyin oninpute run fetch vaule , emmiton on server 
+	// sever brodcaste it in data
+	// on forten its type of typing box signature 
+
+
+
+
+	
+
+
+
+	const chatapp= document.getElementById('chatApp')
+	const mainSection=document.getElementById('mainSection')
+	const userInput=document.getElementById('userText')
+	let typingTimer
+
+	chatapp.addEventListener('submit', function(event){
+		event.preventDefault()
+		const textdata = userInput.value.trim()
+		if (!textdata) return
+
+		const senderMessage = document.createElement('div')
+		senderMessage.id = 'left-senderText'
+		senderMessage.textContent = textdata // setin message in element
+		mainSection.appendChild(senderMessage)
+		userInput.value=''
+		clearTimeout(typingTimer)
+		socket.emit('user:typing','')
+		socket.emit('user:message',textdata)
+	
+
+	})
+	
+
+	userInput.addEventListener('input',(event)=>{
+
+		const value=event.target.value
+		socket.emit('user:typing',value)
+		clearTimeout(typingTimer)
+		typingTimer = setTimeout(() => {
+			socket.emit('user:typing','')
+		}, 700)
+
+	})
+	socket.on('server:message',(data)=>{
+		console.log('server message is', data)
+		const senderMessage= document.createElement('div')
+		senderMessage.id='left-senderText'
+		senderMessage.textContent=data
+		mainSection.appendChild(senderMessage)
+
+	
+	})
+	socket.on('server:typing',(data)=>{
+		let typingBox = mainSection.querySelector('.typeicon')
+
+		if (!data) {
+			typingBox?.remove()
+			return
 		}
-		socket.on('connect', () => { document.querySelector('#statusDot').classList.add('online'); document.querySelector('#statusText').textContent = 'Connected'; });
-		socket.on('disconnect', () => { document.querySelector('#statusDot').classList.remove('online'); document.querySelector('#statusText').textContent = 'Disconnected'; });
-		socket.on('online-count', (count) => document.querySelector('#onlineCount').textContent = count);
-		socket.on('chat-message', addMessage);
-		socket.on('system-message', (text) => { const notice = document.createElement('div'); notice.className = 'system'; notice.textContent = text; messages.append(notice); messages.scrollTop = messages.scrollHeight; });
-		document.querySelector('#nameForm').addEventListener('submit', (event) => { event.preventDefault(); username = nameInput.value.trim() || 'Guest'; socket.emit('join-chat', username); nameModal.remove(); messageInput.focus(); });
-		document.querySelector('#messageForm').addEventListener('submit', (event) => { event.preventDefault(); if (messageInput.value.trim()) { socket.emit('chat-message', messageInput.value); messageInput.value = ''; messageInput.focus(); } });
+
+		if (!typingBox) {
+			typingBox = document.createElement('div')
+			typingBox.classList.add('typeicon')
+			mainSection.appendChild(typingBox)
+		}
+
+	})
+
+
+
+	
+
 	</script>
+	
 </body>
 </html>

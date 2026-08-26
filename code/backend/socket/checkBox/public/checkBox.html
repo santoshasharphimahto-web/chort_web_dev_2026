@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        :root {
+            --ink: #10233f;
+            --muted: #687b98;
+            --line: #d9e5f5;
+            --surface: rgba(255, 255, 255, .94);
+            --blue: #2563eb;
+            --blue-dark: #1744a5;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-width: 320px;
+            min-height: 100vh;
+            margin: 0;
+            padding: clamp(24px, 6vw, 72px) 20px;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 12% 10%, #dbeafe 0, transparent 32%),
+                linear-gradient(135deg, #f8fbff 0%, #e8f0fb 100%);
+            font-family: "Trebuchet MS", sans-serif;
+        }
+
+        #container {
+            position: relative;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(54px, 1fr));
+            gap: 12px;
+            width: min(760px, 100%);
+            min-height: 260px;
+            margin: 0 auto;
+            padding: 72px clamp(20px, 4vw, 38px) clamp(20px, 4vw, 38px);
+            background: var(--surface);
+            border: 1px solid rgba(255, 255, 255, .9);
+            border-radius: 24px;
+            box-shadow: 0 24px 60px rgba(30, 72, 130, .16);
+            backdrop-filter: blur(12px);
+        }
+
+        #container::before {
+            position: absolute;
+            top: 26px;
+            left: clamp(20px, 4vw, 38px);
+            color: var(--ink);
+            content: "Choose your boxes";
+            font-size: clamp(20px, 3vw, 28px);
+            font-weight: 700;
+        }
+
+        #container::after {
+            position: absolute;
+            top: 34px;
+            right: clamp(20px, 4vw, 38px);
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--blue);
+            box-shadow: 0 0 0 6px #dbeafe;
+            content: "";
+        }
+
+        #container input[type="checkbox"] {
+            width: 30px;
+            height: 30px;
+            margin: 0 auto;
+            cursor: pointer;
+            accent-color: var(--blue);
+            transition: transform .18s ease, filter .18s ease;
+        }
+
+        #container input[type="checkbox"]:hover {
+            filter: brightness(.92);
+            transform: scale(1.12);
+        }
+
+        #container input[type="checkbox"]:focus-visible {
+            outline: 3px solid rgba(37, 99, 235, .3);
+            outline-offset: 4px;
+        }
+
+        #container input[type="checkbox"]:checked {
+            accent-color: var(--blue-dark);
+            transform: scale(1.08);
+        }
+
+        @media (max-width: 480px) {
+            #container {
+                grid-template-columns: repeat(5, 1fr);
+                gap: 16px 8px;
+                padding: 68px 16px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.8.3/dist/socket.io.min.js"></script>
+
+    <script>
+    const socket=io()
+    socket.on("server:checkBox",(data)=>{
+        console.log('Checkbox data received:', data)
+        const {index,checked}=data
+        const checkbox= document.getElementById(`checkedBox-${index}`)
+        if(checkbox){
+            checkbox.checked=checked
+        }
+
+
+    })
+    
+    // section of a container to append child checkbox in it
+    // dynamically need to add check box 
+    // nedd to have add event_listner on checkbox 
+    // becuse user click on ehich chebox and show casse a tick 
+    // that action will haappen and only one side of the client 
+    // send info  on the ioserver show it show to connect user
+    // to identif each check box assign id  them
+    // once server send data to the client ,finding check-box and update 
+
+
+    const container= document.getElementById('container');
+    window.addEventListener('load',async()=>{
+        const checkboxList = await fetch('/state', { method: 'GET' })
+        const parsecheckboxList = await checkboxList.json();
+        parsecheckboxList.numberOfcheckbox.forEach((element, index) => {
+            const checkboxrec= document.createElement('input')
+    checkboxrec.type="checkbox";
+    checkboxrec.checked = element;
+    checkboxrec.id=`checkedBox-${index}`
+    checkboxrec.addEventListener('change',(e)=>{
+        const checked = e.target.checked;
+
+        console.log('changed Box',{checked, index})
+        socket.emit('client:checbox:change',{checked, index})
+    })
+    container.appendChild(checkboxrec)
+    
+            
+        });
+
+        
+    })
+     
+    
+
+    //  sever event listing 
+    
+
+
+    
+
+    </script>
+    
+</body>
+</html>

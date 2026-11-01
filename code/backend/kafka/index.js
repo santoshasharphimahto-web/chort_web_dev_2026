@@ -23,20 +23,21 @@ async function main(){
         }
     })
     io.on('connection',async(socket)=>{
-        console.log(`[socket is ${socket.id} is connected...}]`);
+        console.log(`[socket is ${socket.id} is connected...}]`);   
         socket.on('client:location:update', async (data)=>{
             console.log(`Received location update from client ${socket.id}:`, data);
            await producer.send({
                 topic: 'location-Update',
-                messages: [{ value: JSON.stringify({ id: socket.id, latitude: data.lat, longitude: data.lng }) }]
+                messages: [{ value: JSON.stringify({ id: socket.id, latitude: data.lat, longitude: data.lng }),partition:2 }]
            })
 
         })
     })
      app.use(express.static(path.resolve('public')));
-    app.get('/health', (req, res) => {
+     app.get('/health', (req, res) => {
         res.send('Health check passed');
     });
+    
     
 
     server.listen(port, () => {

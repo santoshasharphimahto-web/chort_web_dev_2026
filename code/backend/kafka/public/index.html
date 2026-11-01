@@ -30,7 +30,8 @@ let remoteMarker= new Map()
 socket.on('server:location:update', (data)=>{
     const {lat, lng, id}=data;
     if(!remoteMarker.has(id)){
-        const marker = L.marker([lat, lng]).addTo(map)
+        const marker = L.marker([lat, lng])
+        marker.addTo(map)
             .bindPopup(`User ${id}`)
             .openPopup();
         remoteMarker.set(id, marker);

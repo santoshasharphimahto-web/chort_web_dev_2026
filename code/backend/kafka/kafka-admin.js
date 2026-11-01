@@ -11,7 +11,15 @@ async function setup(){
         topics: [{ topic: 'location-Update', numPartitions: 2 }]
     })
     console.log('createTopics result:', created)
-    await admin.disconnect().catch(()=>{})
+    await admin.disconnect()
+    if(!created){
+        console.log('topic already exists')
+    }else{
+        await admin.disconnect()
+        await kafkaClient.disconnect()
+        console.log('kafka is disconnected')
+    }
+
 
 }
 

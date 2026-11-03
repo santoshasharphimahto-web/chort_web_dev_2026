@@ -1,0 +1,13 @@
+{
+  "name": "react-foundation-workspace",
+  "private": true,
+  "workspaces": [
+    "foundation"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace foundation",
+    "build": "npm run build --workspace foundation",
+    "lint": "npm run lint --workspace foundation",
+    "preview": "npm run preview --workspace foundation"
+  }
+}
